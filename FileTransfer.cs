@@ -13,6 +13,9 @@ using System.Net;
 using System.Net.Sockets;
 using System.Net.NetworkInformation;
 
+//using System.Diagnostics;
+using System.Management;
+
 using WindowsFormsApp1.Resources.Log;
 using WindowsFormsApp1.Resources.Enums;
 using WindowsFormsApp1.Resources.Network;
@@ -34,6 +37,8 @@ namespace WindowsFormsApp1
 
     public partial class FileTransfer : MetroFramework.Forms.MetroForm
     {
+        public string ReceiveFileNameBuffer = ""; //Имя файла, которое принимали
+
         public bool UserCloseForm = false;
         public bool RemoteUserClose = false;
 
@@ -69,6 +74,10 @@ namespace WindowsFormsApp1
             this.Focus();
         }
 
+        public void ClickPopupOnReceiveEnd(object sender, EventArgs args)
+        {
+            System.Diagnostics.Process.Start("Files\\" + ReceiveFileNameBuffer);
+        }
 
         private void UdpConnMessageHandler()
         {
@@ -101,6 +110,7 @@ namespace WindowsFormsApp1
                         });
 
                         FileWriter = new BinaryWriter(new FileStream("Files\\" + fileName, FileMode.Create));
+                        ReceiveFileNameBuffer = fileName;
 
                         ListViewItem item = this.FilesList.Items.Add((this.FilesList.Items.Count + 1).ToString());
                         item.SubItems.Add(fileName);
@@ -112,7 +122,19 @@ namespace WindowsFormsApp1
                         LogApplication.WriteLog($"[UdpConnMessageHandler] Закрываю запись");
                         FileWriter.Close();
 
-                        setReceiveEnd(fileName.Substring(0, fileName.Length - 1));
+                        setReceiveEnd(ReceiveFileNameBuffer);
+                        
+                        GlavnForm.Invoke((MethodInvoker)delegate
+                        {
+                            PopupNotifier popup = new PopupNotifier()
+                            {
+                                TitleText = "FileExchange",
+                                ContentText = $"Завершен приём файла {ReceiveFileNameBuffer}"
+                            };
+
+                            popup.Click += ClickPopupOnReceiveEnd;
+                            popup.Popup();
+                        });
                     }
                     else if (fileName[0] == '2')
                     {
@@ -164,11 +186,17 @@ namespace WindowsFormsApp1
                         {
                             try
                             {
+                                LogApplication.WriteLog($"[TcpBytesReader] read > 0, -> {bytesRead}, write to stream....");
                                 FileWriter.Write(buffer, 0, bytesRead);
-                                ReceiveBytes += bytesRead;
-                                LogApplication.WriteLog($"[TcpBytesReader] Receive bytes {bytesRead}/ ALL {ReceiveBytes}");
+                                LogApplication.WriteLog($"[TcpBytesReader] write {bytesRead} bytes to stream success");
+
+                                //ReceiveBytes += bytesRead;
+                                //LogApplication.WriteLog($"[TcpBytesReader] Receive bytes {bytesRead}/ ALL {ReceiveBytes}");
                             }
-                            catch (Exception ex) { LogApplication.WriteLog("[TcpBytesReader] reading exception " + ex.Message); }
+                            catch (Exception ex) 
+                            {
+                                LogApplication.WriteLog("[TcpBytesReader] reading exception " + ex.Message); 
+                            }
                         }
                     }
                 }
@@ -285,6 +313,7 @@ namespace WindowsFormsApp1
             item.SubItems.Add("228"); //item.SubItems.Add((fileInfo.Length / 1000000.0).ToString() + " МБ");
             item.SubItems.Add("Отправляется");
 
+            
             LogApplication.WriteLog("[Передача файла EVENT] ApplicationDoEvents");
             Application.DoEvents();
 
@@ -316,7 +345,7 @@ namespace WindowsFormsApp1
                 }
                 catch (Exception Ex)
                 {
-                    LogApplication.WriteLog("[SendBytes] excepton \n" + Ex.Message);
+                    LogApplication.WriteLog("[SendBytes] exception \n" + Ex.Message);
                 }
             }
 
@@ -360,7 +389,7 @@ namespace WindowsFormsApp1
             if (e.KeyData.ToString() == "Return")
             {
                 LogApplication.WriteLog($"[Передача файла EVENT] Передача клиенту сообщения {LocalChatText.Text} машине {RemoteIp.ToString()}");
-                string sendBuff = $"2{NetworkModule.Nickname}:{LocalChatText.Text}";
+                string sendBuff = $"2{Config.nickname}:{LocalChatText.Text}";
                 client.Send(Config.Encoder.GetBytes(sendBuff), Config.Encoder.GetBytes(sendBuff).Length, RemoteIp.ToString(), Config.UDP_FILE_NAME_RECEIVE);
                 this.LocalChat.AppendText("ВЫ: " + LocalChatText.Text);
                 this.LocalChatText.Text = "";

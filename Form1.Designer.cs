@@ -37,6 +37,7 @@
             this.StyleManager = new MetroFramework.Components.MetroStyleManager(this.components);
             this.LABEL_START_WORK = new MetroFramework.Controls.MetroLabel();
             this.timerConnect = new System.Windows.Forms.Timer(this.components);
+            this.Button_ShowSettings = new MetroFramework.Controls.MetroButton();
             setStyleBtn = new MetroFramework.Controls.MetroButton();
             this.contextMenuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.StyleManager)).BeginInit();
@@ -44,20 +45,20 @@
             // 
             // setStyleBtn
             // 
-            setStyleBtn.Location = new System.Drawing.Point(119, 5);
+            setStyleBtn.Location = new System.Drawing.Point(85, 5);
             setStyleBtn.Name = "setStyleBtn";
             setStyleBtn.Size = new System.Drawing.Size(75, 20);
             setStyleBtn.TabIndex = 10;
-            setStyleBtn.Text = "стиль";
+            setStyleBtn.Text = "СТИЛЬ";
             setStyleBtn.Click += new System.EventHandler(this.metroButton1_Click_1);
             // 
             // LocalComputersChat
             // 
-            this.LocalComputersChat.Location = new System.Drawing.Point(200, 5);
+            this.LocalComputersChat.Location = new System.Drawing.Point(166, 5);
             this.LocalComputersChat.Name = "LocalComputersChat";
-            this.LocalComputersChat.Size = new System.Drawing.Size(131, 20);
+            this.LocalComputersChat.Size = new System.Drawing.Size(159, 20);
             this.LocalComputersChat.TabIndex = 1;
-            this.LocalComputersChat.Text = "Чат локальной сети";
+            this.LocalComputersChat.Text = "ЧАТ ГЛОБАЛЬНОЙ СЕТИ";
             this.LocalComputersChat.Click += new System.EventHandler(this.LocalComputersChat_Click);
             // 
             // contextMenuStrip1
@@ -66,7 +67,7 @@
             this.попыткаУстановкиСоединенияToolStripMenuItem,
             this.удалитьToolStripMenuItem});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(205, 70);
+            this.contextMenuStrip1.Size = new System.Drawing.Size(205, 48);
             // 
             // попыткаУстановкиСоединенияToolStripMenuItem
             // 
@@ -89,7 +90,7 @@
             // LABEL_START_WORK
             // 
             this.LABEL_START_WORK.AutoSize = true;
-            this.LABEL_START_WORK.Location = new System.Drawing.Point(8, 148);
+            this.LABEL_START_WORK.Location = new System.Drawing.Point(59, 146);
             this.LABEL_START_WORK.Name = "LABEL_START_WORK";
             this.LABEL_START_WORK.Size = new System.Drawing.Size(372, 19);
             this.LABEL_START_WORK.TabIndex = 11;
@@ -102,16 +103,27 @@
             this.timerConnect.Interval = 3000;
             this.timerConnect.Tick += new System.EventHandler(this.timerConnect_Tick);
             // 
+            // Button_ShowSettings
+            // 
+            this.Button_ShowSettings.Location = new System.Drawing.Point(331, 5);
+            this.Button_ShowSettings.Name = "Button_ShowSettings";
+            this.Button_ShowSettings.Size = new System.Drawing.Size(137, 20);
+            this.Button_ShowSettings.TabIndex = 12;
+            this.Button_ShowSettings.Text = "НАСТРОЙКИ";
+            this.Button_ShowSettings.Click += new System.EventHandler(this.metroButton1_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(393, 305);
+            this.ClientSize = new System.Drawing.Size(521, 305);
+            this.Controls.Add(this.Button_ShowSettings);
             this.Controls.Add(this.LABEL_START_WORK);
             this.Controls.Add(setStyleBtn);
             this.Controls.Add(this.LocalComputersChat);
             this.MaximizeBox = false;
             this.Name = "Form1";
+            this.Resizable = false;
             this.Text = "Файловый обмен";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.Load += new System.EventHandler(this.Form1_Load);
@@ -130,6 +142,7 @@
         public System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
         private System.Windows.Forms.ToolStripMenuItem попыткаУстановкиСоединенияToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem удалитьToolStripMenuItem;
+        private MetroFramework.Controls.MetroButton Button_ShowSettings;
     }
 }
 

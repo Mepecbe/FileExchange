@@ -114,12 +114,19 @@ namespace WindowsFormsApp1.Resources.Network
                 NetworkModule.GlavnForm.Invoke((MethodInvoker)delegate
                 {
                     NetworkModule.GlavnForm.Controls.Add(metroTilee);
-                    NetworkModule.GlavnForm.Size = new Size(NetworkModule.GlavnForm.Size.Width + 200, NetworkModule.GlavnForm.Size.Height);
+                    NetworkModule.GlavnForm.Size = new Size(NetworkModule.GlavnForm.Size.Width + 100, NetworkModule.GlavnForm.Size.Height);
                 });
             }
 
             ListLocalMachines.Add(newMachine);
             LogApplication.WriteLog($"Добавлена машина в список {ip.ToString()} с никнеймом {newMachine.ComputerNickname}");
+
+            if(Config.OnFoundNewComputer != null)
+            {
+                LogApplication.WriteLog("Воспроизведение звука OnFoundComputer");
+                Config.OnFoundNewComputer.Play();
+            }
+
 
             return true;
         }
@@ -230,7 +237,6 @@ namespace WindowsFormsApp1.Resources.Network
 
         static public string LocalIp;
         static public List<string> ListIp = new List<string>();
-        static public string Nickname = File.ReadAllText("nick.txt");
 
         static public IPAddress MulticastGroup = IPAddress.Parse("235.5.5.11");
 
@@ -257,7 +263,7 @@ namespace WindowsFormsApp1.Resources.Network
 
                         for (int a = 0; a < 256; a++)
                         {
-                            MyUdpSender.Send(Config.Encoder.GetBytes(Nickname), Config.Encoder.GetBytes(Nickname).Length, new IPEndPoint(IPAddress.Parse(buff + a), Config.UDP_ACTIVITY));
+                            MyUdpSender.Send(Config.Encoder.GetBytes(Config.nickname), Config.Encoder.GetBytes(Config.nickname).Length, new IPEndPoint(IPAddress.Parse(buff + a), Config.UDP_ACTIVITY));
                         }
                     }
                 }

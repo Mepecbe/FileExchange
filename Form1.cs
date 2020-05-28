@@ -26,6 +26,7 @@ using MetroFramework.Native;
 using WindowsFormsApp1.Resources.ApplicationConfig;
 using WindowsFormsApp1.Resources.Network;
 using WindowsFormsApp1.Resources.Log;
+using WindowsFormsApp1.Resources;
 
 using Tulpep.NotificationWindow;
 
@@ -45,21 +46,9 @@ namespace WindowsFormsApp1
             try
             {
                 LogApplication.Init();
+                Config.Init();
+
                 flag = true;
-
-                {
-                    if (!File.Exists("nick.txt"))
-                    {
-                        LogApplication.WriteLog("Создан файл nick.txt");
-                        File.Create("nick.txt").Close();
-                    }
-
-                    if (!Directory.Exists("Files"))
-                    {
-                        LogApplication.WriteLog("Создана директория Files");
-                        Directory.CreateDirectory("Files");
-                    }
-                }
             }
             catch
             {
@@ -92,7 +81,7 @@ namespace WindowsFormsApp1
 
             if(NetworkModule.TryConnect(LocalMachines.GetIPByNickname(textBuff), ref client))
             {
-                FileTransfer s = new FileTransfer(client, null, LocalMachines.GetIPByNickname(textBuff), this);    /////////ПОСМОТРЕТЬ, НУЖЕН ЛИ TCP LISTENER
+                FileTransfer s = new FileTransfer(client, null, LocalMachines.GetIPByNickname(textBuff), this); 
                 s.StyleManager.Theme = StyleManager.Theme;
 
                 if (s.StyleManager.Theme == MetroThemeStyle.Dark)
@@ -115,7 +104,7 @@ namespace WindowsFormsApp1
             }
         }
 
-        //MetroTile tile = new MetroTile();
+
         private void metroButton1_Click_1(object sender, EventArgs e)
         {            
             if (StyleManager.Theme == MetroThemeStyle.Dark)
@@ -143,6 +132,14 @@ namespace WindowsFormsApp1
         private void удалитьToolStripMenuItem_Click(object sender, EventArgs e)
         {
             LocalMachines.RemoveMachine(LocalMachines.GetIPByNickname(this.textBuff));
+        }
+
+        private void metroButton1_Click(object sender, EventArgs e)
+        {
+            SettingsForm settings = new SettingsForm();
+            settings.metroStyleManager1.Theme = this.StyleManager.Theme;
+
+            settings.ShowDialog();
         }
     }
 }
