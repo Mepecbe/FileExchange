@@ -139,7 +139,9 @@ namespace WindowsFormsApp1
             SettingsForm settings = new SettingsForm();
             settings.metroStyleManager1.Theme = this.StyleManager.Theme;
 
+            this.Opacity = 0.97;
             settings.ShowDialog();
+            this.Opacity = 1.0;
         }
     }
 }
