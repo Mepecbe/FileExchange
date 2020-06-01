@@ -72,12 +72,12 @@
             this.metroCheckBox1.AutoSize = true;
             this.metroCheckBox1.Location = new System.Drawing.Point(55, 115);
             this.metroCheckBox1.Name = "metroCheckBox1";
-            this.metroCheckBox1.Size = new System.Drawing.Size(104, 15);
+            this.metroCheckBox1.Size = new System.Drawing.Size(113, 15);
             this.metroCheckBox1.TabIndex = 4;
-            this.metroCheckBox1.Text = "Включить звук";
+            this.metroCheckBox1.Text = "Выключить звук";
             this.metroCheckBox1.UseVisualStyleBackColor = true;
             // 
-            // Settings
+            // SettingsForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -86,7 +86,7 @@
             this.Controls.Add(this.metroTextBox1);
             this.Controls.Add(this.metroButton1);
             this.Controls.Add(this.metroLabel1);
-            this.Name = "Settings";
+            this.Name = "SettingsForm";
             this.Resizable = false;
             this.Text = "Настройки";
             ((System.ComponentModel.ISupportInitialize)(this.metroStyleManager1)).EndInit();

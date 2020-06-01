@@ -50,11 +50,13 @@ namespace WindowsFormsApp1.Resources.Network
     static public class LocalMachines
     {
         static public List<LocalMachine> ListLocalMachines = new List<LocalMachine>();
-
+        static public object locker = new object();
 
         /*================================================================================================*/
         static public bool Add(IPAddress ip, string nickname = "")
         {
+            Monitor.Enter(locker);
+
             foreach (LocalMachine machine in ListLocalMachines)
             {
                 //Проверка, есть ли такая машина у нас в листе
@@ -110,7 +112,6 @@ namespace WindowsFormsApp1.Resources.Network
 
                 newMachine.MachineFormTile = metroTilee;
 
-
                 NetworkModule.GlavnForm.Invoke((MethodInvoker)delegate
                 {
                     NetworkModule.GlavnForm.Controls.Add(metroTilee);
@@ -121,18 +122,19 @@ namespace WindowsFormsApp1.Resources.Network
             ListLocalMachines.Add(newMachine);
             LogApplication.WriteLog($"Добавлена машина в список {ip.ToString()} с никнеймом {newMachine.ComputerNickname}");
 
-            if(Config.OnFoundNewComputer != null)
+            if (Config.OnFoundNewComputer != null)
             {
                 LogApplication.WriteLog("Воспроизведение звука OnFoundComputer");
                 Config.OnFoundNewComputer.Play();
             }
 
-
+            Monitor.Exit(locker);
             return true;
         }
 
         static public void RemoveMachine(IPAddress ip)
         {
+            Monitor.Enter(locker);
             for (int a = 0; a < ListLocalMachines.Count; a++)
             {
                 if (ListLocalMachines[a].RemoteIp.ToString() == ip.ToString())
@@ -144,6 +146,7 @@ namespace WindowsFormsApp1.Resources.Network
             }
 
             RefreshTile();
+            Monitor.Exit(locker);
         }
 
         static public void RemoveMachine(string nickname)
@@ -166,17 +169,21 @@ namespace WindowsFormsApp1.Resources.Network
 
         static public void RefreshTile()
         {
-            if(ListLocalMachines.Count == 0)
+            if (ListLocalMachines.Count == 0)
             {
                 NetworkModule.GlavnForm.LABEL_START_WORK.Visible = true;
-                NetworkModule.GlavnForm.Size = new Size(393, 305);
+                NetworkModule.GlavnForm.Size = new Size(521, 305);
                 return;
             }
 
             if (ListLocalMachines.Count != 0)
                 ListLocalMachines[0].MachineFormTile.Location = new System.Drawing.Point(69, 69);
-            
-            if (ListLocalMachines.Count > 1)
+
+            if (ListLocalMachines.Count == 1)
+            {
+                NetworkModule.GlavnForm.Size = new Size(521, 305);
+            }
+            else if (ListLocalMachines.Count > 1)
             {
                 for (int a = 1; a < ListLocalMachines.Count; a++)
                 {
@@ -190,7 +197,7 @@ namespace WindowsFormsApp1.Resources.Network
 
                 NetworkModule.GlavnForm.Size = new Size(ListLocalMachines[ListLocalMachines.Count - 1].MachineFormTile.Location.X + 200, NetworkModule.GlavnForm.Height);
             }
-            
+
         }
 
 
@@ -232,6 +239,8 @@ namespace WindowsFormsApp1.Resources.Network
 
         static public Thread ReceiveConnectionThread = new Thread(WaitConnectionThread);    //Ожидает подключения по TCP с каким либо клиентом
         static public Thread GlobalChatReceiveThread = new Thread(GlobalChatReceive);       //Принимает сообщения глобального чата
+
+        static public Thread PingThread = new Thread(CheckMachines);
 
         static public List<EndPoint> DestinationHosts = new List<EndPoint>(); //Удалённые хосты
 
@@ -282,8 +291,10 @@ namespace WindowsFormsApp1.Resources.Network
             GlavnForm = ff;
             List<string> s = new List<string>();
 
+            string StringIp = "";
+
+
             {
-                string buffer = "";
                 //Выделение локального IP
                 var host = Dns.GetHostEntry(Dns.GetHostName());
                 foreach (var ip in host.AddressList)
@@ -293,30 +304,17 @@ namespace WindowsFormsApp1.Resources.Network
                         if (LocalIp == null)
                             LocalIp = ip.ToString();
 
-                        buffer += "\n" + ip.ToString();
+                        StringIp += "\n" + ip.ToString();
                         ListIp.Add(ip.ToString());
                         LogApplication.WriteLog("local ip ->" + ip.ToString());
                     }
-                }
-
-                new Task(() =>
-                {
-                    Thread.Sleep(30000);
-                    GlavnForm.Invoke((MethodInvoker)delegate
-                    {
-                        new PopupNotifier()
-                        {
-                            TitleText = "FileExchange",
-                            ContentText = $"Локальные адреса: \n{buffer}"
-                        }.Popup();
-                    });
-                }).Start();
+                }                
             }
 
 
             if (LocalIp == "127.0.0.1")
             {
-                LogApplication.WriteLog("Нет доступных сетей кроме loopback, создание задачи на попытку");
+                LogApplication.WriteLog("Нет доступных сетей кроме loopback, т.к. LocalIp == 127.0.0.1, создание задачи на попытку");
 
                 GlavnForm.Invoke((MethodInvoker)delegate
                 {
@@ -328,6 +326,21 @@ namespace WindowsFormsApp1.Resources.Network
                 });
 
                 return;
+            }
+            else
+            {
+                new Task(() =>
+                {
+                    Thread.Sleep(30000);
+                    GlavnForm.Invoke((MethodInvoker)delegate
+                    {
+                        new PopupNotifier()
+                        {
+                            TitleText = "FileExchange",
+                            ContentText = $"Локальные адреса: \n{StringIp}"
+                        }.Popup();
+                    });
+                }).Start();
             }
 
             GlavnForm.timerConnect.Enabled = false;
@@ -342,6 +355,7 @@ namespace WindowsFormsApp1.Resources.Network
             Thread.Sleep(100);
 
             Detector.Start();
+            PingThread.Start();
 
 
             GlavnForm.Invoke((MethodInvoker)delegate
@@ -369,6 +383,7 @@ namespace WindowsFormsApp1.Resources.Network
             ReceiveConnectionThread.Abort();
             GlobalChatReceiveThread.Abort();
             Detector.Abort();
+            PingThread.Abort();
 
 
             MyUdpClient.Close();
@@ -490,7 +505,7 @@ namespace WindowsFormsApp1.Resources.Network
                     Thread.Sleep(1000);
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 LogApplication.WriteLog("[WaitTCPConnection] Произошла ошибка " + ex.Message);
             }
@@ -555,6 +570,53 @@ namespace WindowsFormsApp1.Resources.Network
             }
 
             return true;
+        }
+
+
+
+        static public void CheckMachines()
+        {
+            LogApplication.WriteLog("[PingCheck] работает, проверка существования клиентов в сети каждые 5 секунд");
+            Ping ping = new Ping();
+
+            while (true)
+            {
+                for (int a = 0; a < LocalMachines.ListLocalMachines.Count; a++)
+                {
+                    try
+                    {
+                        PingReply reply = ping.Send(LocalMachines.ListLocalMachines[a].RemoteIp);
+                        if (reply.Status != IPStatus.Success)
+                        {
+                            bool result = false;
+
+                            for (int aa = 0; aa < 3; aa++)
+                            {
+                                reply = ping.Send(LocalMachines.ListLocalMachines[a].RemoteIp);
+                                if (reply.Status == IPStatus.Success)
+                                {
+                                    result = true;
+                                    break;
+                                }
+                            }
+
+                            if (!result)
+                            {
+                                LogApplication.WriteLog("[PingCheck] Обнаружена машина, которая недоступна, удаление");
+                                LocalMachines.RemoveMachine(LocalMachines.ListLocalMachines[a].RemoteIp);
+                                break;
+                            }
+                        }
+
+                    }
+                    catch (Exception ex)
+                    {
+                        LogApplication.WriteLog($"[PingCheck] Исключение \n{ex.Message}\nSTACK\n{ex.StackTrace}\n[PingCheck] Удаляю машину {LocalMachines.ListLocalMachines[a].ComputerNickname}:{LocalMachines.ListLocalMachines[a].RemoteIp.ToString()}");
+                    }
+                }
+
+                Thread.Sleep(TimeSpan.FromSeconds(5));
+            }
         }
     }
 }

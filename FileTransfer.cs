@@ -347,6 +347,8 @@ namespace WindowsFormsApp1
                 {
                     LogApplication.WriteLog("[SendBytes] exception \n" + Ex.Message);
                 }
+
+                Application.DoEvents();
             }
 
             Thread.Sleep(300);
