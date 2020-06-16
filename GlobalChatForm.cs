@@ -12,7 +12,6 @@ using System.Net;
 using System.Net.Sockets;
 
 using WindowsFormsApp1.Resources.Log;
-using WindowsFormsApp1.Resources.Enums;
 using WindowsFormsApp1.Resources.Network;
 using WindowsFormsApp1.Resources.ApplicationConfig;
 
@@ -120,24 +119,3 @@ namespace WindowsFormsApp1
         }
     }
 }
-
-/*
- static public void SendMessage(string message) //отправка сообщения всем клиентам
-        {
-            Lines.Add("ВЫ: " + message);
-            foreach(EndPoint point in LocalMachines.IpEndPoints)
-            {
-                NetworkModule.UdpClient.SendTo(Config.Encoder.GetBytes(message), point);
-            }
-        }
-
-        static public void ShowMessage(string message) //Вывод сообщения в форму чата
-        {
-            Lines.Add(message);
-            if (ChatForm.ShownForm)
-                ChatForm.Invoke((MethodInvoker)delegate
-                {
-                    ChatForm.chatTextBox.AppendText(message);
-                });
-        }
-     */

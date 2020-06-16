@@ -96,7 +96,6 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Resources\Config.cs" />
-    <Compile Include="Resources\Enums.cs" />
     <Compile Include="Resources\LogApplication.cs" />
     <Compile Include="Resources\NetworkModule.cs" />
     <Compile Include="Resources\SettingsForm.cs">

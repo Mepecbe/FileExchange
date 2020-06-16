@@ -17,7 +17,6 @@ using System.Net.NetworkInformation;
 using System.Drawing;
 
 using WindowsFormsApp1.Resources.ApplicationConfig;
-using WindowsFormsApp1.Resources.Enums;
 using WindowsFormsApp1.Resources.Log;
 
 using Tulpep.NotificationWindow;
@@ -201,7 +200,6 @@ namespace WindowsFormsApp1.Resources.Network
         }
 
 
-
         static public string GetNicknameByIP(IPAddress ip)
         {
             foreach (LocalMachine machine in ListLocalMachines)
@@ -214,11 +212,7 @@ namespace WindowsFormsApp1.Resources.Network
         }
 
 
-
-
-
-
-
+                          
         static public IPAddress GetIPByNickname(string nick)
         {
             foreach (LocalMachine machine in ListLocalMachines)

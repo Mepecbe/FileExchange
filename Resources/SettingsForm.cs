@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 
 using WindowsFormsApp1.Resources.ApplicationConfig;
-using WindowsFormsApp1.Resources.Enums;
 using WindowsFormsApp1.Resources.Log;
 
 using Tulpep.NotificationWindow;

@@ -17,7 +17,6 @@ using System.Net.NetworkInformation;
 using System.Management;
 
 using WindowsFormsApp1.Resources.Log;
-using WindowsFormsApp1.Resources.Enums;
 using WindowsFormsApp1.Resources.Network;
 using WindowsFormsApp1.Resources.ApplicationConfig;
 
