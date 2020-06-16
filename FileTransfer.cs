@@ -24,6 +24,7 @@ using WindowsFormsApp1.Resources.ApplicationConfig;
 using System.IO;
 
 using Tulpep.NotificationWindow;
+using WindowsFormsApp1.Resources.ApplicationConfig;
 
 namespace WindowsFormsApp1
 {
@@ -72,6 +73,7 @@ namespace WindowsFormsApp1
             TcpFileBytesReceiver.Start();
 
             this.Focus();
+            Config.OnOpenConnect.Play();
         }
 
         public void ClickPopupOnReceiveEnd(object sender, EventArgs args)
@@ -97,6 +99,7 @@ namespace WindowsFormsApp1
 
                     if (fileName[0] == '1')
                     {
+                        //Сообщение, сигнал о приёме файла
                         fileName = fileName.Substring(1, fileName.Length - 1);
                         LogApplication.WriteLog($"[UdpConnMessageHandler] ->{fileName}<- открываю на запись");
 
@@ -114,11 +117,12 @@ namespace WindowsFormsApp1
 
                         ListViewItem item = this.FilesList.Items.Add((this.FilesList.Items.Count + 1).ToString());
                         item.SubItems.Add(fileName);
-                        item.SubItems.Add(228.ToString());
+                        item.SubItems.Add((FileWriter.BaseStream.Length / 1000000) + " МБайт");
                         item.SubItems.Add("Принимаю");
                     }
                     else if (fileName[0] == '0')
                     {
+                        //Сигнал, окончание приёма
                         LogApplication.WriteLog($"[UdpConnMessageHandler] Закрываю запись");
                         FileWriter.Close();
 
@@ -134,17 +138,26 @@ namespace WindowsFormsApp1
 
                             popup.Click += ClickPopupOnReceiveEnd;
                             popup.Popup();
+                            Config.OnReceiveFile.Play();
                         });
                     }
                     else if (fileName[0] == '2')
                     {
+                        //Сообщение локального чата
                         LogApplication.WriteLog("[UdpConnMessageHandler] Принял сообщение локального чата -> " + fileName);
                         this.LocalChat.AppendText(fileName.Substring(1, fileName.Length - 1));
                     }
                     else if (fileName[0] == '3')
                     {
+                        //Закрытие соединения
                         LogApplication.WriteLog("[UdpConnMessageHandler] Удалённый компьютер прислал сообщение о том, что пользователь закрывает форму");
                         this.RemoteUserClose = true;
+                        Config.OnCloseConnect.Play();
+                    }
+                    else if(fileName[0] == '4')
+                    {
+                        //Размер пакета
+                        this.FilesList.Items[this.FilesList.Items.Count - 1].SubItems[2].Text = fileName.Substring(1, fileName.Length - 1) + " МБайт";
                     }
                     else
                     {
@@ -291,6 +304,7 @@ namespace WindowsFormsApp1
         {
             LogApplication.WriteLog("\n\n[Передача файла EVENT] Открытие диалога выбора файла");
             this.TransferFile_Progress.Value = 0;
+            Label_State.Text = "Выбор файла";
 
             GlavnForm.Invoke((MethodInvoker)delegate
             {
@@ -310,7 +324,7 @@ namespace WindowsFormsApp1
             ListViewItem item = this.FilesList.Items.Add((this.FilesList.Items.Count + 1).ToString());
             item.SubItems.Add(AddFileDialog.FileNames[0].Substring(AddFileDialog.FileNames[0].LastIndexOf('\\') + 1));
             FileInfo fileInfo = new FileInfo(AddFileDialog.FileNames[0]);
-            item.SubItems.Add("228"); //item.SubItems.Add((fileInfo.Length / 1000000.0).ToString() + " МБ");
+            item.SubItems.Add((fileInfo.Length / 1000000f).ToString() + " МБ");
             item.SubItems.Add("Отправляется");
 
             
@@ -318,46 +332,75 @@ namespace WindowsFormsApp1
             Application.DoEvents();
 
             client = new UdpClient();
-            string fileName = "1" + AddFileDialog.FileNames[0].Substring(AddFileDialog.FileNames[0].LastIndexOf('\\') + 1, AddFileDialog.FileNames[0].Length - AddFileDialog.FileNames[0].LastIndexOf('\\') - 1);
+            string buffer = "1" + AddFileDialog.FileNames[0].Substring(AddFileDialog.FileNames[0].LastIndexOf('\\') + 1, AddFileDialog.FileNames[0].Length - AddFileDialog.FileNames[0].LastIndexOf('\\') - 1);
 
-            LogApplication.WriteLog($"[Передача файла EVENT] Передача клиенту названия файла {fileName}");
-            client.Send(Config.Encoder.GetBytes(fileName), Config.Encoder.GetBytes(fileName).Length, RemoteIp.ToString(), Config.UDP_FILE_NAME_RECEIVE);
-
-            //tcpClient.GetStream().Write(Config.Encoder.GetBytes("1" + AddFileDialog.FileNames[0]), 0, Config.Encoder.GetBytes("1" + AddFileDialog.FileNames[0]).Length);
-
-            LogApplication.WriteLog("[Передача файла EVENT] Передано, начинаю передачу по TCP -> " + AddFileDialog.FileNames[0] + "\n\n\n");
-            BinaryReader reader = new BinaryReader(new FileStream(AddFileDialog.FileNames[0], FileMode.Open));
-
-            this.TransferFile_Progress.Maximum = (int)reader.BaseStream.Length;
-
-            long sendedBytes = 0;
-            while (reader.BaseStream.Position < reader.BaseStream.Length)
+            LogApplication.WriteLog($"[Передача файла EVENT] Передача клиенту названия файла {buffer}");
             {
-                try
-                {
-                    byte[] ReadBytes = reader.ReadBytes(1024);
-                    tcpClient.GetStream().Write(ReadBytes, 0, ReadBytes.Length);
-
-                    sendedBytes += ReadBytes.Length;
-                    this.TransferFile_Progress.Value += ReadBytes.Length;
-                    LogApplication.WriteLog($"SEND bytes {ReadBytes.Length.ToString()}/{sendedBytes}");
-                    LogApplication.WriteLog($"Stream position {reader.BaseStream.Position}/{reader.BaseStream.Length}\n");
-                }
-                catch (Exception Ex)
-                {
-                    LogApplication.WriteLog("[SendBytes] exception \n" + Ex.Message);
-                }
-
-                Application.DoEvents();
+                Label_State.Text = "Передача названия файла";
+                client.Send(Config.Encoder.GetBytes(buffer), Config.Encoder.GetBytes(buffer).Length, RemoteIp.ToString(), Config.UDP_FILE_NAME_RECEIVE);
             }
 
-            Thread.Sleep(300);
-            LogApplication.WriteLog("[Передача файла EVENT] Типа передано, отправляю сигнал о закрытии потока");
-            client.Send(Config.Encoder.GetBytes("00zdkf"), Config.Encoder.GetBytes("00zdkf").Length, RemoteIp.ToString(), Config.UDP_FILE_NAME_RECEIVE);
+            LogApplication.WriteLog($"[Передача файла EVENT] Передача клиенту размера файла");
+            {
+                buffer = $"4{fileInfo.Length / 1000000f}";
+                client.Send(Config.Encoder.GetBytes(buffer), Config.Encoder.GetBytes(buffer).Length, RemoteIp.ToString(), Config.UDP_FILE_NAME_RECEIVE);
+            }
 
-            LogApplication.WriteLog("[Передача файла EVENT] Конец");
+            new Task(() =>
+            {
+                LogApplication.WriteLog("[Передача файла EVENT] Передано, начинаю передачу по TCP -> " + AddFileDialog.FileNames[0] + "\n\n\n");
+                BinaryReader reader = new BinaryReader(new FileStream(AddFileDialog.FileNames[0], FileMode.Open));
 
-            item.SubItems[3].Text = "Передано";
+                this.TransferFile_Progress.Maximum = (int)reader.BaseStream.Length;
+
+                long sendedBytes = 0;
+
+                Label_State.Text = "Передача файла";
+
+                while (reader.BaseStream.Position < reader.BaseStream.Length)
+                {
+                    try
+                    {
+                        byte[] ReadBytes = reader.ReadBytes(1024);
+                        tcpClient.GetStream().Write(ReadBytes, 0, ReadBytes.Length);
+
+                        sendedBytes += ReadBytes.Length;
+                        this.TransferFile_Progress.Value += ReadBytes.Length;
+                        LogApplication.WriteLog($"SEND bytes {ReadBytes.Length.ToString()}/{sendedBytes}");
+                        LogApplication.WriteLog($"Stream position {reader.BaseStream.Position}/{reader.BaseStream.Length}\n");
+                    }
+                    catch (Exception Ex)
+                    {
+                        LogApplication.WriteLog("[SendBytes] exception \n" + Ex.Message);
+                    }
+
+
+                    GlavnForm.Invoke((MethodInvoker)delegate
+                    {
+                        Label_State.Text = $"Идёт передача {reader.BaseStream.Position / (float)reader.BaseStream.Length * 100} из 100%";
+                    });                    
+                }
+
+
+                Thread.Sleep(300);
+                LogApplication.WriteLog("[Передача файла EVENT] Типа передано, отправляю сигнал о закрытии потока");
+                client.Send(Config.Encoder.GetBytes("00zdkf"), Config.Encoder.GetBytes("00zdkf").Length, RemoteIp.ToString(), Config.UDP_FILE_NAME_RECEIVE);
+
+                LogApplication.WriteLog("[Передача файла EVENT] Конец");
+                
+                GlavnForm.Invoke((MethodInvoker)delegate
+                {
+                    item.SubItems[3].Text = "Передано";
+                    new PopupNotifier()
+                    {
+                        TitleText = "FileExchange",
+                        ContentText = $"Файл {item.SubItems[1].Text} успешно передан"
+                    }.Popup();
+                });
+                reader.Close();
+            }).Start();
+
+            
         }
         #endregion
 

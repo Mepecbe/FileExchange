@@ -146,9 +146,6 @@
     <None Include="Icons\computer-screen.svg" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Others\OnFoundComputer.wav">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <None Include="Icons\three-computers-educational-network-symbol.png" />
     <Content Include="MetroFramework.txt" />
   </ItemGroup>
@@ -164,6 +161,8 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Others\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
