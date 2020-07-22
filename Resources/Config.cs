@@ -43,6 +43,13 @@ namespace WindowsFormsApp1.Resources.ApplicationConfig
 
             {
                 LogApplication.WriteLog(" Load file");
+
+                if (!File.Exists("conf.txt"))
+                {
+                    LogApplication.WriteLog(" Create config file");
+                    File.Create("conf.txt"); 
+                    File.WriteAllText("conf.txt", "Default\n1"); 
+                }
                 StreamReader reader = new StreamReader("conf.txt");
                 nickname = reader.ReadLine();
                 LogApplication.WriteLog($" Load nickname -> {nickname}");
