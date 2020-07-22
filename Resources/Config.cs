@@ -47,8 +47,9 @@ namespace WindowsFormsApp1.Resources.ApplicationConfig
                 if (!File.Exists("conf.txt"))
                 {
                     LogApplication.WriteLog(" Create config file");
-                    File.Create("conf.txt"); 
-                    File.WriteAllText("conf.txt", "Default\n1"); 
+                    FileStream newConfFile = File.Create("conf.txt");
+                    newConfFile.Write(Encoding.Unicode.GetBytes("Default\n1"), 0, 18);
+                    newConfFile.Close();
                 }
                 StreamReader reader = new StreamReader("conf.txt");
                 nickname = reader.ReadLine();
